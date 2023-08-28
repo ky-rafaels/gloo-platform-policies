@@ -1,0 +1,13 @@
+apiVersion: observability.policy.gloo.solo.io/v2
+kind: AccessLogPolicy
+metadata:
+  name: access-log-policy
+  namespace: httpbin
+spec:
+  applyToWorkloads:
+  - selector:
+      labels:
+        route: productpage 
+  config:
+    includedRequestHeaders:
+      - "x-subscription-tier"

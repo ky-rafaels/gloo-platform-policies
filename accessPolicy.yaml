@@ -1,0 +1,27 @@
+---
+apiVersion: security.policy.gloo.solo.io/v2
+kind: AccessPolicy
+metadata:
+  name: httpbin-access
+  namespace: httpbin
+spec:
+  applyToDestinations:
+  - port:
+      number: 8000
+    selector:
+      labels:
+        app: httpbin
+  config:
+    authn:
+      tlsMode: STRICT
+    authz:
+      allowedClients:
+      - serviceAccountSelector:
+          name: istio-eastwestgateway-1-17-service-account
+          namespace: istio-gateways
+      - serviceAccountSelector:
+          name: istio-ingressgateway-1-17-service-account
+          namespace: istio-gateways
+      - serviceAccountSelector:
+          name: default
+          namespace: curl

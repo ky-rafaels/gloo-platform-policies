@@ -1,0 +1,107 @@
+---
+apiVersion: networking.gloo.solo.io/v2
+kind: VirtualDestination
+metadata:
+  annotations:
+    cluster.solo.io/cluster: ""
+  name: productpage-global
+  namespace: bookinfo-frontends
+spec:
+  hosts:
+  - productpage.global
+  ports:
+  - number: 9080
+    protocol: HTTP
+  services:
+  - namespace: bookinfo-frontends
+    labels:
+      app: productpage
+---
+apiVersion: resilience.policy.gloo.solo.io/v2
+kind: OutlierDetectionPolicy
+metadata:
+  annotations:
+    cluster.solo.io/cluster: ""
+  name: outlier-detection
+  namespace: bookinfo-frontends
+spec:
+  applyToDestinations:
+  - kind: VIRTUAL_DESTINATION
+    selector: 
+      name: productpage-global
+      namespace: bookinfo-frontends
+      cluster: cluster1
+  config:
+    baseEjectionTime: 30s
+    consecutiveErrors: 2
+    interval: 1s
+    maxEjectionPercent: 100
+---
+apiVersion: resilience.policy.gloo.solo.io/v2
+kind: FailoverPolicy
+metadata:
+  annotations:
+    cluster.solo.io/cluster: ""
+  name: productpage-failover
+  namespace: bookinfo-frontends
+spec:
+  applyToDestinations:
+  - kind: VIRTUAL_DESTINATION
+    selector: 
+        name: productpage-global
+        namespace: bookinfo-frontends
+        cluster: cluster1
+  config:
+    localityMappings: []
+---
+apiVersion: networking.gloo.solo.io/v2
+kind: RouteTable
+metadata:
+  labels:
+    expose: "true"
+  name: main
+  namespace: istio-ingress-private
+spec:
+  hosts:
+  - '*'
+  http:
+  - delegate:
+      routeTables:
+      - labels:
+          expose: "true"
+      sortMethod: ROUTE_SPECIFICITY
+    matchers:
+    - uri:
+        prefix: /
+    name: root
+  virtualGateways:
+  - cluster: cluster1
+    name: north-south-gw
+    namespace: istio-ingress-private
+  workloadSelectors: []
+---
+apiVersion: networking.gloo.solo.io/v2
+kind: RouteTable
+metadata:
+  labels:
+    expose: "true"
+  name: productpage
+  namespace: bookinfo-frontends
+spec:
+  http:
+  - forwardTo:
+      destinations:
+      - ref:
+          name: productpage-global
+          namespace: bookinfo-frontends
+        kind: VIRTUAL_DESTINATION
+        port:
+          number: 9080
+    matchers:
+    - uri:
+        exact: /productpage
+    - uri:
+        prefix: /static
+    - uri:
+        prefix: /api/v1/products
+    name: productpage

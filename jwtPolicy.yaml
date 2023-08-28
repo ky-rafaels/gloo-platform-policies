@@ -1,0 +1,45 @@
+apiVersion: security.policy.gloo.solo.io/v2
+kind: JWTPolicy
+metadata:
+  labels:
+    gateway-type: private
+  name: httpbin-claims
+  namespace: gloo-mesh
+spec:
+  applyToRoutes:
+  - route:
+      labels:
+        route: httpbin-gg.kyle.consultsolo.net
+  config:
+    providers:
+      keycloak:
+        claimsToHeaders:
+          - claim: tier
+            header: x-subscription-tier
+        issuer: http://keycloak-opa.kyle.consultsolo.net/realms/master
+        local:
+          inline: |
+            -----BEGIN PUBLIC KEY-----
+            MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA37enobuu5Bw/zXGkYJMH0QdlW3KSdLy3sxtC7ZBWzVloRh/gR3JukF9hiwZMvMnX2J2EzyKvM1ZQo+FPnOt+crpJuJAh1CxHhjozN4KkqQV4NRy+1PtGLseFre6XpdRkszM9gY0Gr/ZfVelkx9CC1ZKpQNzh8xJoudvsP9lJiZkyvHkY0fY9VM91zYhqrAROSruk4skpoXwLucIyrqHomegbU8+zwJXM7m2OQ8lp1rQZ4KTS1etftdgmgujXCvfHZvJQywcbvxbu8zweanMUPRDD69fOBCQmJEmTvZ8NnUfGg6edIYVP+T/T+8lewN+xPiWcuxGKFvWSrXknpbbtTQIDAQAB
+            -----END PUBLIC KEY-----
+        # remote:
+        #   url: http://keycloak-opa.kyle.consultsolo.net/realms/master/protocol/openid-connect/certs
+        #   destinationRef:
+        #     port:
+        #       number: 80
+        #     ref:
+        #       name: httpbin-external-service 
+        #       namespace: gloo-mesh
+        #       cluster: cluster1
+        #     kind: EXTERNAL_SERVICE
+        #   enableAsyncFetch: false
+        tokenSource:
+          headers:
+          - name: 'Authorization'
+            prefix: "Bearer "
+          queryParams:
+          - token
+    phase:
+      postAuthz:
+        priority: 1
+        

@@ -1,0 +1,27 @@
+apiVersion: trafficcontrol.policy.gloo.solo.io/v2
+kind: TransformationPolicy
+metadata:
+  annotations:
+    cluster.solo.io/cluster: ""
+  name: httpbin-change-response
+  namespace: httpbin
+spec:
+  applyToRoutes:
+  - route:
+      labels:
+        response_transform: "true" 
+  config:
+    phase: 
+      postAuthz:
+        priority: 1
+    response:
+      injaTemplate:
+        advancedTemplates: false
+        parseBodyBehavior: ParseAsJson
+        extractors:
+          parseBody:
+            body: {}                            # specify a response body extraction
+            regex: '.*headers'                  # extract headers object of response body
+            subgroup: 0
+        body:
+          text: '{ "Host": {{ headers.Host }} }'    # rewrite response body

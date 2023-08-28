@@ -1,0 +1,50 @@
+---
+apiVersion: admin.gloo.solo.io/v2
+kind: ExtAuthServer
+metadata:
+  name: httpbin
+  namespace: httpbin
+spec:
+  destinationServer:
+    port:
+      number: 8083
+    ref:
+      cluster: $CLUSTER_NAME
+      name: ext-auth-service
+      namespace: gloo-mesh-addons
+---
+apiVersion: v1
+kind: Secret
+type: extauth.solo.io/oauth
+metadata:
+  name: okta-client-secret
+  namespace: httpbin
+data:
+  client-secret: $(echo -n ${CLIENT_SECRET} | base64)
+---
+apiVersion: security.policy.gloo.solo.io/v2 
+kind: ExtAuthPolicy 
+metadata: 
+  name: httpbin-okta 
+  namespace: httpbin
+spec: 
+  applyToRoutes: 
+    - route: 
+        labels: 
+          route: "httpbin-cluster2" 
+  config: 
+    glooAuth: 
+      configs: 
+      - oauth2: 
+          oidcAuthorizationCode: 
+            appUrl: $APP_URL 
+            callbackPath: /callback 
+            clientId: $CLIENT_ID
+            clientSecretRef: 
+              name: okta-client-secret 
+              namespace: httpbin 
+            issuerUrl: $ISSUER_URL 
+            scopes: 
+            - openid 
+    server: 
+      name: httpbin
