@@ -1,2 +1,3 @@
 # gloo-platform-policies
-Example repo consisting of sample Gloo Platform Policies
+
+A collection of sample Gloo Platform policies

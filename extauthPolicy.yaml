@@ -31,7 +31,7 @@ spec:
   applyToRoutes: 
     - route: 
         labels: 
-          route: "httpbin-cluster2" 
+          oauth: "true" 
   config: 
     glooAuth: 
       configs: 
