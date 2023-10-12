@@ -37,14 +37,14 @@ spec:
       configs: 
       - oauth2: 
           oidcAuthorizationCode: 
-            appUrl: $APP_URL 
-            callbackPath: /callback 
-            clientId: $CLIENT_ID
+            appUrl: httpbin-ea.fitchconnect-dev.com 
+            callbackPath: /callback
+            clientId: <random-string>
             clientSecretRef: 
               name: okta-client-secret 
               namespace: httpbin 
-            issuerUrl: $ISSUER_URL 
+            issuerUrl: <cognito-url>
             scopes: 
-            - openid 
+            - openid
     server: 
       name: httpbin
